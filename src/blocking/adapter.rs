@@ -1,37 +1,8 @@
 use crate::blocking::Session;
-use dbus::arg;
-use dbus::arg::RefArg;
-use std::collections::HashMap;
+use crate::*;
 use std::error::Error;
-use std::time::Duration;
 
 static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
-static BLUEZ_SERVICE: &str = "org.bluez";
-static MANAGED_OBJECT_INTERFACE: &str = "org.freedesktop.DBus.ObjectManager";
-static MANAGED_OBJECT_METHOD: &str = "GetManagedObjects";
-
-type ManagedObject = HashMap<
-    dbus::Path<'static>,
-    HashMap<String, HashMap<String, arg::Variant<Box<dyn arg::RefArg + 'static>>>>,
->;
-
-type BoxError = Box<dyn Error + 'static>;
-
-/// BlueZの`managed object`から値を取得する
-trait TypeUtil {
-    fn get_as_str(&self, key: &str) -> Option<String>;
-}
-
-impl TypeUtil for HashMap<String, arg::Variant<Box<dyn arg::RefArg + 'static>>> {
-    fn get_as_str(&self, key: &str) -> Option<String> {
-        if let Some(value) = self.get(key) {
-            if let Some(s) = value.as_str() {
-                return Some(s.to_string());
-            }
-        }
-        None
-    }
-}
 
 pub struct Adapter<'a> {
     session: &'a Session,
@@ -64,7 +35,7 @@ impl<'a> Adapter<'a> {
 
     /// bluetoothアダプターの一覧を取得
     pub fn list(session: &'a Session) -> Result<Option<Vec<String>>, BoxError> {
-        let objects = get_managed_objects(session)?;
+        let objects = session.get_managed_objects()?;
 
         let adapters: Vec<String> = objects
             .iter()
@@ -87,43 +58,22 @@ impl<'a> Adapter<'a> {
     ///
     /// アダプターに登録されているデバイスのパスのリストを取得する
     pub fn device_list(&self) -> Result<Option<Vec<String>>, BoxError> {
-        let objects = get_managed_objects(self.session)?;
-
-        let devices: Vec<String> = objects
-            .iter()
-            .filter_map(|(key, value)| {
-                if is_adapter_device(&self.path, value) {
-                    Some(key.to_string())
-                } else {
-                    None
-                }
-            })
-            .collect();
-        if devices.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(devices))
-        }
+        self.session.get_children(&self.path, "Adapter")
     }
-}
 
-fn is_adapter_device(
-    path: &str,
-    info: &HashMap<String, HashMap<String, arg::Variant<Box<dyn arg::RefArg + 'static>>>>,
-) -> bool {
-    info.iter().any(|(_key, value)| {
-        if let Some(s) = value.get_as_str("Adapter") {
-            return s == path;
-        }
-        false
-    })
-}
+    /// デバイスの検索を開始する
+    pub fn start_discovery(&self) -> Result<(), BoxError> {
+        self.sub_discovery("StartDiscovery")
+    }
 
-fn get_managed_objects(session: &Session) -> Result<ManagedObject, BoxError> {
-    let proxy = session
-        .get_connection()
-        .with_proxy(BLUEZ_SERVICE, "/", Duration::from_secs(10));
-    let (managed_objects,): (ManagedObject,) =
-        proxy.method_call(MANAGED_OBJECT_INTERFACE, MANAGED_OBJECT_METHOD, ())?;
-    Ok(managed_objects)
+    /// デバイスの検索を停止する
+    pub fn stop_discovery(&self) -> Result<(), BoxError> {
+        self.sub_discovery("StopDiscovery")
+    }
+
+    fn sub_discovery(&self, method: &str) -> Result<(), BoxError> {
+        self.session
+            .method_call(&self.path, ADAPTER_INTERFACE, method, ())?;
+        Ok(())
+    }
 }
