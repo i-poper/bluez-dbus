@@ -1,6 +1,6 @@
 use crate::*;
 use dbus::arg::Variant;
-use dbus::arg::{AppendAll, ReadAll};
+use dbus::arg::{Append, AppendAll, ReadAll};
 use dbus::blocking::Connection;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -37,6 +37,22 @@ impl Session {
             (interface, property.to_string()),
         )?;
         Ok(value)
+    }
+
+    pub(in crate) fn set_property<A: Append>(
+        &self,
+        interface: &str,
+        path: &str,
+        property: &str,
+        value: A,
+    ) -> Result<(), BoxError> {
+        let _ = self.method_call(
+            path,
+            "org.freedesktop.DBus.Properties",
+            "Set",
+            (interface, property.to_string(), value),
+        )?;
+        Ok(())
     }
 
     /// BlueZに対するメソッド実行

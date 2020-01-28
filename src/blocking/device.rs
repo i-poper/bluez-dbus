@@ -1,5 +1,6 @@
 use crate::blocking::Session;
 use crate::*;
+use dbus::arg::Variant;
 
 pub struct Device<'a> {
     session: &'a Session,
@@ -44,6 +45,13 @@ impl<'a> Device<'a> {
         }
     }
 
+    fn set_property_bool(&self, prop: &str, value: bool) -> Result<(), BoxError> {
+        let value = Variant(value);
+        self.session
+            .set_property("org.bluez.Device1", &self.path, prop, value)?;
+        Ok(())
+    }
+
     //--------------------------------------------------------------------------------
     // プロパティ
     pub fn get_address(&self) -> Result<String, BoxError> {
@@ -67,5 +75,9 @@ impl<'a> Device<'a> {
 
     pub fn is_trusted(&self) -> Result<bool, BoxError> {
         self.get_property_bool("Trusted")
+    }
+
+    pub fn set_trusted(&self, value: bool) -> Result<(), BoxError> {
+        self.set_property_bool("Trusted", value)
     }
 }
