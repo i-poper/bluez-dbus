@@ -38,6 +38,7 @@ fn print_dev(dev: &Device) -> Result<(), Box<dyn Error>> {
     if let Ok(address) = dev.get_address() {
         println!("  address: {}", address);
     }
+    println!("     path: {}", dev.get_path());
     println!("  trusted: {}", dev.is_trusted()?);
     println!("  paired : {}", dev.is_paired()?);
     if let Ok(icon) = dev.get_icon() {
