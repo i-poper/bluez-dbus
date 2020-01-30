@@ -2,6 +2,8 @@ use crate::blocking::Session;
 use crate::*;
 use dbus::arg::{Append, Arg, Variant};
 
+static DEVICE_INTERFACE: &str = "org.bluez.Device1";
+
 pub struct Device<'a> {
     session: &'a Session,
     path: String,
@@ -29,14 +31,14 @@ impl<'a> Device<'a> {
     fn get_property_string(&self, prop: &str) -> Result<String, BoxError> {
         let value = self
             .session
-            .get_property("org.bluez.Device1", &self.path, prop)?;
+            .get_property(DEVICE_INTERFACE, &self.path, prop)?;
         Ok(value.as_str().unwrap().to_string())
     }
 
     fn get_property_bool(&self, prop: &str) -> Result<bool, BoxError> {
         let value = self
             .session
-            .get_property("org.bluez.Device1", &self.path, prop)?;
+            .get_property(DEVICE_INTERFACE, &self.path, prop)?;
         let b = value.as_i64().unwrap();
         if b == 1 {
             Ok(true)
@@ -48,7 +50,7 @@ impl<'a> Device<'a> {
     fn set_property<T: Append + Arg>(&self, prop: &str, value: T) -> Result<(), BoxError> {
         let value = Variant(value);
         self.session
-            .set_property("org.bluez.Device1", &self.path, prop, value)?;
+            .set_property(DEVICE_INTERFACE, &self.path, prop, value)?;
         Ok(())
     }
 
@@ -57,6 +59,7 @@ impl<'a> Device<'a> {
     pub fn get_address(&self) -> Result<String, BoxError> {
         self.get_property_string("Address")
     }
+
     pub fn get_name(&self) -> Result<String, BoxError> {
         self.get_property_string("Name")
     }
