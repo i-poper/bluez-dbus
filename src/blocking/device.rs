@@ -35,16 +35,11 @@ impl<'a> Device<'a> {
         Ok(value.as_str().unwrap().to_string())
     }
 
-    fn get_property_bool(&self, prop: &str) -> Result<bool, BoxError> {
+    fn get_property<T: 'static + Copy>(&self, prop: &str) -> Result<T, BoxError> {
         let value = self
             .session
             .get_property(DEVICE_INTERFACE, &self.path, prop)?;
-        let b = value.as_i64().unwrap();
-        if b == 1 {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        Ok(*value.as_any().downcast_ref::<T>().unwrap())
     }
 
     fn set_property<T: Append + Arg>(&self, prop: &str, value: T) -> Result<(), BoxError> {
@@ -69,15 +64,15 @@ impl<'a> Device<'a> {
     }
 
     pub fn is_paired(&self) -> Result<bool, BoxError> {
-        self.get_property_bool("Paired")
+        self.get_property("Paired")
     }
 
     pub fn is_connected(&self) -> Result<bool, BoxError> {
-        self.get_property_bool("Connected")
+        self.get_property("Connected")
     }
 
     pub fn is_trusted(&self) -> Result<bool, BoxError> {
-        self.get_property_bool("Trusted")
+        self.get_property("Trusted")
     }
 
     pub fn set_trusted(&self, value: bool) -> Result<(), BoxError> {
