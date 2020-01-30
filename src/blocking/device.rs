@@ -1,6 +1,6 @@
 use crate::blocking::Session;
 use crate::*;
-use dbus::arg::{Append, Arg, Variant};
+use dbus::arg::{Append, Arg, Get, Variant};
 
 static DEVICE_INTERFACE: &str = "org.bluez.Device1";
 
@@ -28,18 +28,11 @@ impl<'a> Device<'a> {
         self.session.get_children(&self.path, "Device")
     }
 
-    fn get_property_string(&self, prop: &str) -> Result<String, BoxError> {
-        let value = self
-            .session
-            .get_property(DEVICE_INTERFACE, &self.path, prop)?;
-        Ok(value.as_str().unwrap().to_string())
-    }
-
-    fn get_property<T: 'static + Copy>(&self, prop: &str) -> Result<T, BoxError> {
-        let value = self
-            .session
-            .get_property(DEVICE_INTERFACE, &self.path, prop)?;
-        Ok(*value.as_any().downcast_ref::<T>().unwrap())
+    fn get_property<T: for<'z> Get<'z>>(&self, prop: &str) -> Result<T, BoxError> {
+        let (value,): (Variant<T>,) =
+            self.session
+                .get_property(DEVICE_INTERFACE, &self.path, prop)?;
+        Ok(value.0)
     }
 
     fn set_property<T: Append + Arg>(&self, prop: &str, value: T) -> Result<(), BoxError> {
@@ -52,15 +45,15 @@ impl<'a> Device<'a> {
     //--------------------------------------------------------------------------------
     // プロパティ
     pub fn get_address(&self) -> Result<String, BoxError> {
-        self.get_property_string("Address")
+        self.get_property("Address")
     }
 
     pub fn get_name(&self) -> Result<String, BoxError> {
-        self.get_property_string("Name")
+        self.get_property("Name")
     }
 
     pub fn get_icon(&self) -> Result<String, BoxError> {
-        self.get_property_string("Icon")
+        self.get_property("Icon")
     }
 
     pub fn is_paired(&self) -> Result<bool, BoxError> {

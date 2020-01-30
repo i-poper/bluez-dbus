@@ -1,5 +1,4 @@
 use crate::*;
-use dbus::arg::Variant;
 use dbus::arg::{Append, AppendAll, ReadAll};
 use dbus::blocking::Connection;
 use std::sync::{Arc, Mutex};
@@ -24,19 +23,18 @@ impl Session {
         })
     }
 
-    pub(in crate) fn get_property(
+    pub(in crate) fn get_property<A: ReadAll>(
         &self,
         interface: &str,
         path: &str,
         property: &str,
-    ) -> Result<Variant<Box<dyn arg::RefArg + 'static>>, BoxError> {
-        let (value,): (Variant<Box<dyn arg::RefArg + 'static>>,) = self.method_call(
+    ) -> Result<A, BoxError> {
+        Ok(self.method_call(
             path,
             "org.freedesktop.DBus.Properties",
             "Get",
             (interface, property.to_string()),
-        )?;
-        Ok(value)
+        )?)
     }
 
     pub(in crate) fn set_property<A: Append>(
