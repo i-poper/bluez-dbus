@@ -56,7 +56,7 @@ fn print_dev(session: &Session, dev: &Device) -> Result<(), Box<dyn Error>> {
 
 fn print_gatt(session: &Session, gatt: &str) -> Result<(), Box<dyn Error>> {
     println!("Gatt Service: {}", gatt);
-    let gatt_service = GattService::new( session, gatt);
+    let gatt_service = GattService::new(session, gatt);
     println!(" device:{}", gatt_service.get_device()?);
     if let Ok(Some(chars)) = gatt_service.get_characteristics() {
         chars.iter().for_each(|charc| {

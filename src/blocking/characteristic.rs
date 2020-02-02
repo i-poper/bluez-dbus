@@ -19,6 +19,7 @@ impl<'a> Characteristic<'a> {
             path: path.to_string(),
         }
     }
+
     pub fn get_descriptors(&self) -> Result<Option<Vec<String>>, BoxError> {
         self.session.get_children(&self.path, "Characteristic")
     }
@@ -31,18 +32,24 @@ impl<'a> Characteristic<'a> {
     }
 
     pub fn write_value(&self, values: Vec<u8>) -> Result<(), BoxError> {
-        Ok(self.session
-                .method_call(&self.path, CHARACTERISTIC_INTERFACE, "WriteValue", (values,))?)
+        Ok(self.session.method_call(
+            &self.path,
+            CHARACTERISTIC_INTERFACE,
+            "WriteValue",
+            (values,),
+        )?)
     }
 
     pub fn start_notify(&self) -> Result<(), BoxError> {
-        Ok(self.session
-                .method_call(&self.path, CHARACTERISTIC_INTERFACE, "StartNotify", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, CHARACTERISTIC_INTERFACE, "StartNotify", ())?)
     }
 
     pub fn stop_notify(&self) -> Result<(), BoxError> {
-        Ok(self.session
-                .method_call(&self.path, CHARACTERISTIC_INTERFACE, "StopNotify", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, CHARACTERISTIC_INTERFACE, "StopNotify", ())?)
     }
 
     fn get_property<A: for<'z> Get<'z>>(&self, property: &str) -> Result<A, BoxError> {

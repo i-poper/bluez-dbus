@@ -12,3 +12,6 @@ pub use gatt_service::GattService;
 
 mod characteristic;
 pub use characteristic::Characteristic;
+
+mod descriptor;
+pub use descriptor::Descriptor;
