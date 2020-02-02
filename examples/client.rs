@@ -40,9 +40,10 @@ fn print_dev(dev: &Device) -> Result<(), Box<dyn Error>> {
     }
     println!("     path: {}", dev.get_path());
     println!("  trusted: {}", dev.is_trusted()?);
-    println!("  paired : {}", dev.is_paired()?);
+    println!("   paired: {}", dev.is_paired()?);
+    println!("    UUIDs: {:?}", dev.get_uuids()?);
     if let Ok(icon) = dev.get_icon() {
-        println!("  icon   : {}", icon);
+        println!("     icon: {}", icon);
     }
     if let Ok(Some(gatts)) = dev.get_gatt_services() {
         gatts.iter().for_each(|gatt| {

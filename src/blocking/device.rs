@@ -1,6 +1,6 @@
 use crate::blocking::Session;
 use crate::*;
-use dbus::arg::{Append, Arg, Get, Variant};
+use dbus::arg::{Append, Arg, Get};
 
 static DEVICE_INTERFACE: &str = "org.bluez.Device1";
 
@@ -28,47 +28,62 @@ impl<'a> Device<'a> {
         self.session.get_children(&self.path, "Device")
     }
 
-    fn get_property<T: for<'z> Get<'z>>(&self, prop: &str) -> Result<T, BoxError> {
-        let (value,): (Variant<T>,) =
-            self.session
-                .get_property(DEVICE_INTERFACE, &self.path, prop)?;
-        Ok(value.0)
+    pub fn connect(&self) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Connect", ())?)
     }
 
+    pub fn disconnect(&self) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Disconnect", ())?)
+    }
+
+    pub fn connect_profile(&self, value: &str) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "ConnectProfile", (value,))?)
+    }
+
+    pub fn disconnect_profile(&self, value: &str) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "DisconnectProfile", (value,))?)
+    }
+
+    pub fn pair(&self) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Pair", ())?)
+    }
+
+    pub fn cancel_pairing(&self) -> Result<(), BoxError> {
+        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "CancelPairing", ())?)
+    }
+
+    fn get_property<A: for<'z> Get<'z>>(&self, property: &str) -> Result<A, BoxError> {
+        Ok(self
+            .session
+            .get_property(&self.path, DEVICE_INTERFACE, property)?)
+    }
     fn set_property<T: Append + Arg>(&self, prop: &str, value: T) -> Result<(), BoxError> {
-        let value = Variant(value);
-        self.session
-            .set_property(DEVICE_INTERFACE, &self.path, prop, value)?;
-        Ok(())
+        Ok(self
+            .session
+            .set_property(&self.path, DEVICE_INTERFACE, prop, value)?)
     }
 
     //--------------------------------------------------------------------------------
     // プロパティ
-    pub fn get_address(&self) -> Result<String, BoxError> {
-        self.get_property("Address")
-    }
-
-    pub fn get_name(&self) -> Result<String, BoxError> {
-        self.get_property("Name")
-    }
-
-    pub fn get_icon(&self) -> Result<String, BoxError> {
-        self.get_property("Icon")
-    }
-
-    pub fn is_paired(&self) -> Result<bool, BoxError> {
-        self.get_property("Paired")
-    }
-
-    pub fn is_connected(&self) -> Result<bool, BoxError> {
-        self.get_property("Connected")
-    }
-
-    pub fn is_trusted(&self) -> Result<bool, BoxError> {
-        self.get_property("Trusted")
-    }
-
-    pub fn set_trusted(&self, value: bool) -> Result<(), BoxError> {
-        self.set_property("Trusted", value)
-    }
+    // get
+    get_property!(get_address, String, "Address");
+    get_property!(get_name, String, "Name");
+    get_property!(get_icon, String, "Icon");
+    get_property!(get_class, u32, "Class");
+    get_property!(get_appearance, u16, "Appearance");
+    get_property!(get_uuids, Vec<String>, "UUIDs");
+    get_property!(is_paired, bool, "Paired");
+    get_property!(is_connected, bool, "Connected");
+    get_property!(is_trusted, bool, "Trusted");
+    get_property!(is_blocked, bool, "Blocked");
+    get_property!(get_alias, String, "Alias");
+    get_property!(get_adapter, String, "Adapter");
+    get_property!(is_legacy_pairing, bool, "LegacyPairing");
+    get_property!(get_modalias, String, "Modalias");
+    get_property!(get_rssi, i16, "RSSI");
+    get_property!(get_tx_power, i16, "TxPower");
+    // set
+    set_property!(set_trusted, bool, "Trusted");
+    set_property!(set_blocked, bool, "Blocked");
+    set_property!(set_alias, String, "Alias");
 }
