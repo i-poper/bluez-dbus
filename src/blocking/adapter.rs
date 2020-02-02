@@ -1,5 +1,6 @@
 use crate::blocking::Session;
 use crate::*;
+use dbus::arg::{Append, Arg, Get};
 use std::error::Error;
 
 static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
@@ -71,9 +72,51 @@ impl<'a> Adapter<'a> {
         self.sub_discovery("StopDiscovery")
     }
 
+    pub fn remove_device(&self, device: &str) -> Result<(), BoxError> {
+        self.session
+            .method_call(&self.path, ADAPTER_INTERFACE, "RemoveDevice", (device,))?;
+        Ok(())
+    }
+
+    // TODO: SetDiscoveryFilter
+
     fn sub_discovery(&self, method: &str) -> Result<(), BoxError> {
         self.session
             .method_call(&self.path, ADAPTER_INTERFACE, method, ())?;
         Ok(())
     }
+
+    fn get_property<A: for<'z> Get<'z>>(&self, property: &str) -> Result<A, BoxError> {
+        Ok(self
+            .session
+            .get_property(&self.path, ADAPTER_INTERFACE, property)?)
+    }
+    fn set_property<T: Append + Arg>(&self, prop: &str, value: T) -> Result<(), BoxError> {
+        Ok(self
+            .session
+            .set_property(&self.path, ADAPTER_INTERFACE, prop, value)?)
+    }
+
+    //--------------------------------------------------------------------------------
+    // プロパティ
+    // get
+    get_property!(get_address, String, "Address");
+    get_property!(get_name, String, "Name");
+    get_property!(get_alias, String, "Alias");
+    get_property!(get_class, u32, "Class");
+    get_property!(is_powered, bool, "Powered");
+    get_property!(is_discoverable, bool, "Discoverable");
+    get_property!(is_pairable, bool, "Pairable");
+    get_property!(get_pairable_timeout, u32, "PairableTimeout");
+    get_property!(get_discoverable_timeout, u32, "DiscoverableTimeout");
+    get_property!(is_discovering, bool, "Discovering");
+    get_property!(get_uuids, Vec<String>, "UUIDs");
+    get_property!(get_modalias, String, "Modalias");
+    // set
+    set_property!(set_alias, String, "Alias");
+    set_property!(set_powered, bool, "Powered");
+    set_property!(set_discoverable, bool, "Discoverable");
+    set_property!(set_pairable, bool, "Pairable");
+    set_property!(set_pairable_timeout, u32, "PairableTimeout");
+    set_property!(set_discoverable_timeout, u32, "DiscoverableTimeout");
 }
