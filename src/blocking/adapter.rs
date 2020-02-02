@@ -5,6 +5,7 @@ use std::error::Error;
 
 static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
 
+#[derive(Debug)]
 pub struct Adapter<'a> {
     session: &'a Session,
     path: String,

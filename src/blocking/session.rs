@@ -1,6 +1,8 @@
 use crate::*;
 use dbus::arg::{Append, AppendAll, Arg, Get, ReadAll, Variant};
 use dbus::blocking::Connection;
+use std::fmt;
+use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -11,6 +13,13 @@ pub struct Session {
     // 複数スレッドでも使えるように`Mutex`を使用している
     // その分性能を犠牲にしている。
     conn: Arc<Mutex<Connection>>,
+}
+
+impl Debug for Session {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let conn = self.conn.lock().unwrap();
+        write!(f, "Session {{ conn: {} }}", conn.unique_name())
+    }
 }
 
 /// BlueZとの通信を行うセッション

@@ -1,9 +1,11 @@
 use crate::blocking::Session;
 use crate::*;
 use dbus::arg::{Append, Arg, Get};
+use dbus::strings::Path;
 
 static DEVICE_INTERFACE: &str = "org.bluez.Device1";
 
+#[derive(Debug)]
 pub struct Device<'a> {
     session: &'a Session,
     path: String,
@@ -29,27 +31,39 @@ impl<'a> Device<'a> {
     }
 
     pub fn connect(&self) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Connect", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "Connect", ())?)
     }
 
     pub fn disconnect(&self) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Disconnect", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "Disconnect", ())?)
     }
 
     pub fn connect_profile(&self, value: &str) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "ConnectProfile", (value,))?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "ConnectProfile", (value,))?)
     }
 
     pub fn disconnect_profile(&self, value: &str) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "DisconnectProfile", (value,))?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "DisconnectProfile", (value,))?)
     }
 
     pub fn pair(&self) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "Pair", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "Pair", ())?)
     }
 
     pub fn cancel_pairing(&self) -> Result<(), BoxError> {
-        Ok(self.session.method_call(&self.path, DEVICE_INTERFACE, "CancelPairing", ())?)
+        Ok(self
+            .session
+            .method_call(&self.path, DEVICE_INTERFACE, "CancelPairing", ())?)
     }
 
     fn get_property<A: for<'z> Get<'z>>(&self, property: &str) -> Result<A, BoxError> {
@@ -77,7 +91,7 @@ impl<'a> Device<'a> {
     get_property!(is_trusted, bool, "Trusted");
     get_property!(is_blocked, bool, "Blocked");
     get_property!(get_alias, String, "Alias");
-    get_property!(get_adapter, String, "Adapter");
+    get_property!(get_adapter, Path, "Adapter");
     get_property!(is_legacy_pairing, bool, "LegacyPairing");
     get_property!(get_modalias, String, "Modalias");
     get_property!(get_rssi, i16, "RSSI");
