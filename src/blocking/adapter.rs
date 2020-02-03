@@ -3,8 +3,6 @@ use crate::*;
 use dbus::arg::{Append, Arg, Get};
 use std::error::Error;
 
-static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
-
 #[derive(Debug)]
 pub struct Adapter<'a> {
     session: &'a Session,
@@ -27,7 +25,7 @@ impl<'a> Adapter<'a> {
         session: &'a Session,
         path: &str,
     ) -> Result<Option<Self>, Box<dyn Error + 'static>> {
-        if let Some(adapters) = Adapter::list(session)? {
+        if let Some(adapters) = session.get_adapters()? {
             if adapters.contains(&path.to_string()) {
                 return Ok(Some(Adapter::new(session, path)));
             }
@@ -35,31 +33,10 @@ impl<'a> Adapter<'a> {
         Ok(None)
     }
 
-    /// bluetoothアダプターの一覧を取得
-    pub fn list(session: &'a Session) -> Result<Option<Vec<String>>, BoxError> {
-        let objects = session.get_managed_objects()?;
-
-        let adapters: Vec<String> = objects
-            .iter()
-            .filter_map(|(key, value)| {
-                if value.contains_key(ADAPTER_INTERFACE) {
-                    return Some(key.to_string());
-                }
-                None
-            })
-            .collect();
-
-        if adapters.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(adapters))
-        }
-    }
-
     /// デバイスリスト取得
     ///
     /// アダプターに登録されているデバイスのパスのリストを取得する
-    pub fn device_list(&self) -> Result<Option<Vec<String>>, BoxError> {
+    pub fn get_devices(&self) -> Result<Option<Vec<String>>, BoxError> {
         self.session.get_children(&self.path, "Adapter")
     }
 

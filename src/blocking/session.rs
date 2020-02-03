@@ -32,6 +32,27 @@ impl Session {
         })
     }
 
+    /// bluetoothアダプターの一覧を取得
+    pub fn get_adapters(&self) -> Result<Option<Vec<String>>, BoxError> {
+        let objects = self.get_managed_objects()?;
+
+        let adapters: Vec<String> = objects
+            .iter()
+            .filter_map(|(key, value)| {
+                if value.contains_key(ADAPTER_INTERFACE) {
+                    return Some(key.to_string());
+                }
+                None
+            })
+            .collect();
+
+        if adapters.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(adapters))
+        }
+    }
+
     pub(in crate) fn get_property<A: for<'z> Get<'z>>(
         &self,
         path: &str,

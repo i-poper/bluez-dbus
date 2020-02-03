@@ -12,6 +12,7 @@ type ManagedObject = HashMap<dbus::Path<'static>, ManagedObjectInterfaces>;
 type BoxError = Box<dyn Error + 'static>;
 
 static BLUEZ_SERVICE: &str = "org.bluez";
+static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
 
 /// プロパティ取得の関数を作成するマクロ
 #[doc(hidden)]

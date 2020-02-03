@@ -5,7 +5,7 @@ use std::time::Duration;
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let s = Session::new().unwrap();
-    let adapters = Adapter::list(&s)?;
+    let adapters = s.get_adapters()?;
     let adapters = adapters.unwrap();
     adapters.iter().for_each(|adapter| {
         println!("{}", adapter);
@@ -17,7 +17,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     thread::sleep(Duration::from_millis(2000));
 
     if let Some(a) = Adapter::create(&s, adapter_path)? {
-        if let Some(devices) = a.device_list()? {
+        if let Some(devices) = a.get_devices()? {
             let devices: Vec<Device> = devices
                 .iter()
                 .map(|device| Device::new(&s, device))
