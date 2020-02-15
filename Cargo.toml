@@ -7,4 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dbus = "0.8.1"
+# dbus = "0.8.1"
+dbus = { path = "../dbus-rs/dbus" }
+tokio = { version = "0.2.11", features = ["rt-threaded"] }
+# dbus-tokio = "0.5.0"
+dbus-tokio = { path = "../dbus-rs/dbus-tokio" }

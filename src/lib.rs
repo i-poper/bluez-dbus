@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 pub mod blocking;
+pub mod nonblock;
 
 type ManagedObjectInterfaces =
     HashMap<String, HashMap<String, arg::Variant<Box<dyn arg::RefArg + 'static>>>>;
@@ -13,28 +14,6 @@ type BoxError = Box<dyn Error + 'static>;
 
 static BLUEZ_SERVICE: &str = "org.bluez";
 static ADAPTER_INTERFACE: &str = "org.bluez.Adapter1";
-
-/// プロパティ取得の関数を作成するマクロ
-#[doc(hidden)]
-#[macro_export]
-macro_rules! get_property {
-    ($func: ident, $t: ty, $prop: expr) => {
-        pub fn $func(&self) -> Result<$t, BoxError> {
-            self.get_property($prop)
-        }
-    }
-    }
-
-/// プロパティ設定の関数を作成するマクロ
-#[doc(hidden)]
-#[macro_export]
-macro_rules! set_property {
-    ($func: ident, $t: ty, $prop: expr) => {
-        pub fn $func(&self, value: $t) -> Result<(), BoxError> {
-            self.set_property($prop, value)
-        }
-    }
-}
 
 /// BlueZの`managed object`から値を取得する
 trait TypeUtil {

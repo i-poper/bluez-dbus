@@ -34,7 +34,10 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn print_dev(session: &Session, dev: &Device) -> Result<(), Box<dyn Error>> {
-    println!("【{}】", dev.get_name()?);
+    println!("【{}】", match dev.get_name() {
+        Ok(name) => name,
+        _ => "no_name".to_string(),
+    });
     if let Ok(address) = dev.get_address() {
         println!("  address: {}", address);
     }
