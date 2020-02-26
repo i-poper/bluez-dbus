@@ -1,7 +1,11 @@
 use crate::*;
 use dbus::arg::{Append, AppendAll, Arg, Get, ReadAll, Variant};
-use dbus::nonblock::{Proxy, SyncConnection};
-use dbus_tokio::connection::new_system_sync;
+#[cfg(feature = "local")]
+use dbus::nonblock::LocalConnection;
+use dbus::nonblock::Proxy;
+#[cfg(not(feature = "local"))]
+use dbus::nonblock::SyncConnection;
+use dbus_tokio::connection as dbus_conn;
 use std::fmt;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -11,9 +15,13 @@ use tokio::task;
 static MANAGED_OBJECT_INTERFACE: &str = "org.freedesktop.DBus.ObjectManager";
 static MANAGED_OBJECT_METHOD: &str = "GetManagedObjects";
 
+/// BlueZとのセッション
 #[derive(Clone)]
 pub struct Session {
+    #[cfg(not(feature = "local"))]
     conn: Arc<SyncConnection>,
+    #[cfg(feature = "local")]
+    conn: Arc<LocalConnection>,
 }
 
 impl Debug for Session {
@@ -26,11 +34,24 @@ impl Debug for Session {
 impl Session {
     /// BlueZとの通信を行うセッションの作成
     pub fn new() -> Result<Self, BoxError> {
-        let (resource, conn) = new_system_sync()?;
-        task::spawn(async {
-            let err = resource.await;
-            panic!("Lost connection to D-Bus: {}", err);
-        });
+        #[cfg(not(feature = "local"))]
+        let conn = {
+            let (resource, conn) = dbus_conn::new_system_sync()?;
+            task::spawn(async move {
+                let err = resource.await;
+                panic!("Lost connection to D-Bus: {}", err);
+            });
+            conn
+        };
+        #[cfg(feature = "local")]
+        let conn = {
+            let (resource, conn) = dbus_conn::new_system_local()?;
+            task::spawn_local(async move {
+                let err = resource.await;
+                panic!("Lost connection to D-Bus: {}", err);
+            });
+            conn
+        };
 
         Ok(Session { conn })
     }
