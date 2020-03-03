@@ -8,11 +8,9 @@ edition = "2018"
 
 [dependencies]
 dbus = "0.8.1"
-tokio = { version = "0.2.11", features = ["rt-threaded", "rt-util", "time"] }
+tokio = { version = "=0.2.11", features = ["rt-threaded", "rt-util", "time"] }
 dbus-tokio = "0.5.1"
 
 [features]
 default=[]
-sync=[]
 local=[]
-
